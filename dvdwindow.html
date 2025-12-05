@@ -1,0 +1,102 @@
+<!doctype html>
+<title>DVD Window</title>
+<style>
+    * {
+        outline: none;
+        user-select: none;
+    }
+    body, ::selection {
+        background-color: black;
+        color: lightgray;
+    }
+
+    button {
+        background-color: lightgray;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+</style>
+
+<button id="openWinBtn">Open window</button><br>
+<button id="closeWinsBtn">Close windows</button><br>
+<label for="canOpenMoreWinsInp">Can open more windows: </label><input type="checkbox" id="canOpenMoreWinsInp">
+
+<script>
+    let wins = []
+    function openWin () {
+        let win = open(undefined, "_blank", "popup,width=100,height=100")
+        if (win == null) return false
+
+win.document.write(`\
+<script>
+    let wins = []
+    moveTo(0, 0)
+
+    let velX = 10, velY = 10
+    let lastFrameTime = performance.now()
+    function move (oldX, oldY) {
+        let outX = oldX, outY = oldY
+        if (performance.now() - lastFrameTime >= 25) {
+            lastFrameTime = performance.now()
+            let movedX = screenLeft != oldX, movedY = screenTop != oldY
+
+            if (!movedX && !movedY) {
+                velX *= -1, velY *= -1
+                execFuncOpener("onWinCornerHit")
+                if (execFuncOpener("canOpenMoreWins")) execFuncHere("openWin")
+            } else if (!movedX) {
+                velX *= -1
+                moveBy(velX, 0)
+            } else if (!movedY) {
+                velY *= -1
+                moveBy(0, velY)
+            }
+
+            outX = screenLeft, outY = screenTop
+            moveBy(velX, velY)
+        }
+        requestAnimationFrame(() => move(outX, outY))
+    }
+    move(-1, -1)
+
+    function closeWins () { execFuncHere("closeWins"); close() }
+    function canOpenMoreWins () { return false }
+    function onWinCornerHit () { execFuncOpener("onWinCornerHit") }
+
+    function execFuncOpener (name) {
+        return opener[name]()
+    }
+    function execFuncHere (name) {
+        let text = opener[name].toString()
+        text = text.substring(text.indexOf("() "))
+        text = "(function " + text + ")()"
+        return eval(text)
+    }
+<\/script>
+`)
+        wins.push(win)
+        return true
+    }; openWinBtn.onclick = () => openWin()
+    function closeWins () {
+        for (let win of wins) {
+            try {
+                win.closeWins()
+            } catch (er) {
+                try { win.close(); console.warn("A window was closed forcefully.") }
+                catch (er) { console.error("A window could not be closed.") }
+            }
+        }
+        console.log("All windows closed!")
+        wins.length = 0
+    }; closeWinsBtn.onclick = () => closeWins()
+    onbeforeunload = function () { closeWins() }
+
+    function canOpenMoreWins () {
+        try { return canOpenMoreWinsInp.checked }
+        catch (er) { return false }
+    }
+
+    function onWinCornerHit () {
+        console.log("A window hit a corner!")
+    }
+</script>
