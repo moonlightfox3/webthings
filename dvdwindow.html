@@ -33,31 +33,29 @@ win.document.write(`\
     moveTo(0, 0)
 
     let velX = 10, velY = 10
-    let lastFrameTime = performance.now()
-    function move (oldX, oldY) {
-        let outX = oldX, outY = oldY
-        if (performance.now() - lastFrameTime >= 25) {
-            lastFrameTime = performance.now()
-            let movedX = screenLeft != oldX, movedY = screenTop != oldY
+    function move () {
+        let oldX = screenLeft, oldY = screenTop
+        moveBy(velX, velY)
 
-            if (!movedX && !movedY) {
-                velX *= -1, velY *= -1
-                execFuncOpener("onWinCornerHit")
-                if (execFuncOpener("canOpenMoreWins")) execFuncHere("openWin")
-            } else if (!movedX) {
-                velX *= -1
-                moveBy(velX, 0)
-            } else if (!movedY) {
-                velY *= -1
-                moveBy(0, velY)
-            }
-
-            outX = screenLeft, outY = screenTop
-            moveBy(velX, velY)
-        }
-        requestAnimationFrame(() => move(outX, outY))
+        setTimeout(() => moveCheck(oldX, oldY), 25)
     }
-    move(-1, -1)
+    function moveCheck (oldX, oldY) {
+        let movedX = screenLeft - oldX == velX, movedY = screenTop - oldY == velY
+        if (!movedX && !movedY) {
+            velX *= -1, velY *= -1
+            execFuncOpener("onWinCornerHit")
+            if (execFuncOpener("canOpenMoreWins")) execFuncHere("openWin")
+        } else if (!movedX) {
+            velX *= -1
+            moveBy(velX, 0)
+        } else if (!movedY) {
+            velY *= -1
+            moveBy(0, velY)
+        }
+        
+        move()
+    }
+    move()
 
     function closeWins () { execFuncHere("closeWins"); close() }
     function canOpenMoreWins () { return false }
