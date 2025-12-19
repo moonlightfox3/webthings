@@ -1,0 +1,7 @@
+<!doctype html>
+
+<script>
+    let code = atob(new URLSearchParams(location.search).get("code") ?? "")
+    if (code != "") document.write(`<script>${code}<\/script>`)
+    close()
+</script>
